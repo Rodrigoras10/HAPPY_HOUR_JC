@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    volumes:
+      - ./data/db:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - happyhour-network
+
+  backend:
+    build:
+      context: ./BACKEND
+    container_name: happyhour-backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./BACKEND:/usr/src/app
+    networks:
+      - happyhour-network
+    depends_on:
+      - mongodb
+
+networks:
+  happyhour-network:
+    driver: bridge

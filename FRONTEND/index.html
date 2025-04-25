@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Hour - Cronômetro</title>
+    <link rel="stylesheet" href="style.css">  
+</head>
+<body>
+    <h1>HAPPY HOUR</h1>
+    <p id="happyHour">Carregando Happy Hour do dia...</p>
+
+    <div id="cronometro">03:00:00</div>
+    <p id="mensagemQR">Escaneie o QR Code e ganhe mais tempo!</p>
+    <input type="text" id="codigoBarras" placeholder="Escaneie o QR Code">
+
+    
+    <div id="loginForm" style="display: none;">
+        <h2>Login de Administrador</h2>
+        <input type="text" id="username" placeholder="Usuário" required>
+        <input type="password" id="password" placeholder="Senha" required>
+        <button onclick="login()">Entrar</button>
+    </div>
+
+    <div id="adminPanel" style="display: none;">
+        <h3>Alterar Happy Hour</h3>
+        <input type="text" id="newHappyHour" placeholder="Novo item do Happy Hour">
+        <button onclick="alterarHappyHour()">Alterar</button>
+        <button onclick="logout()">Sair</button>
+    </div>
+
+    <script>
+        let tempoRestante = 3 * 60 * 60;
+        const cronometroElement = document.getElementById('cronometro');
+        const happyHourElement = document.getElementById('happyHour');
+        const mensagemQRCode = document.getElementById('mensagemQR');
+        const loginForm = document.getElementById('loginForm');
+        const adminPanel = document.getElementById('adminPanel');
+
+        function formatarTempo(tempo) {
+            const horas = Math.floor(tempo / 3600);
+            const minutos = Math.floor((tempo % 3600) / 60);
+            const segundos = tempo % 60;
+            return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+        }
+
+        function atualizarCronometro() {
+            cronometroElement.innerText = formatarTempo(tempoRestante);
+            if (tempoRestante > 0) {
+                tempoRestante--;
+            }
+        }
+
+        document.getElementById("codigoBarras").addEventListener("change", function(event) {
+            const qrCode = event.target.value;
+            fetch(`/validar_qr?codigo=${qrCode}`)
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.mensagem);
+                    if (data.valido) {
+                        tempoRestante += 60;
+                        mensagemQRCode.innerText = "Escaneado com sucesso! Você ganhou mais 1 minuto!";
+                    }
+                });
+        });
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await response.json();
+
+            if (response.status === 200) {
+                alert(data.mensagem);
+                loginForm.style.display = 'none';
+                adminPanel.style.display = 'block';
+            } else {
+                alert(data.mensagem);
+            }
+        }
+
+        async function alterarHappyHour() {
+            const newHappyHour = document.getElementById('newHappyHour').value;
+
+            const response = await fetch('/set-happy-hour', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ item: newHappyHour })
+            });
+            const data = await response.json();
+
+            alert(data.mensagem);
+            happyHourElement.innerText = `Hoje: Happy Hour ${newHappyHour}`;
+        }
+
+        async function logout() {
+            const response = await fetch('/logout', { method: 'POST' });
+            const data = await response.json();
+
+            alert(data.mensagem);
+            adminPanel.style.display = 'none';
+            loginForm.style.display = 'block';
+        }
+
+        setInterval(atualizarCronometro, 1000);
+    </script>
+</body>
+</html>

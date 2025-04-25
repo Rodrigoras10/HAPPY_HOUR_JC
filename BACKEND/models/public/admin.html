@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin - Happy Hour</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 500px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #fafafa;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button.logout {
+      background-color: #dc3545;
+    }
+    #mensagem {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Login do Administrador</h2>
+  <input type="text" id="username" placeholder="Usuário">
+  <input type="password" id="password" placeholder="Senha">
+  <button onclick="login()">Entrar</button>
+
+  <h2>Alterar Happy Hour do Dia</h2>
+  <input type="text" id="novoItem" placeholder="Novo item do Happy Hour">
+  <button onclick="atualizarHappyHour()">Atualizar Happy Hour</button>
+
+  <button class="logout" onclick="logout()">Logout</button>
+
+  <div id="mensagem"></div>
+
+  <script>
+    function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('mensagem').innerText = data.mensagem || 'Erro ao logar';
+      });
+    }
+
+    function atualizarHappyHour() {
+      const item = document.getElementById('novoItem').value;
+
+      fetch('/set-happy-hour', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('mensagem').innerText = data.mensagem;
+      });
+    }
+
+    function logout() {
+      fetch('/logout', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('mensagem').innerText = data.mensagem;
+        });
+    }
+  </script>
+
+</body>
+</html>
